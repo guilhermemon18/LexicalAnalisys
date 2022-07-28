@@ -1,0 +1,17 @@
+int main(){
+gatojjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjj;
+	while(5 
+		casa = 5 * 5;grafite = 10 * 10;"casa
+@int 1cachorro, gatojklio7jjjjj;
+int casa;
+switch(6){
+case 1:
+$cachorro = 5;
+case 2:
+cachorro = 3;
+break;
+default: 
+break
+return 0;
+}
+}

@@ -1,0 +1,17 @@
+int main(){
+	while(5) 
+		casa = 5 * 5;grafite = 10 * 10;
+int cachorro, gato;
+int casa;
+switch(6){
+case 1:
+cachorro = 5;
+case 2:
+cachorro = 3;
+break;
+default: 
+break;
+printf("casa");
+return 0;
+}
+}

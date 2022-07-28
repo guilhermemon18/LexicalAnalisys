@@ -1,0 +1,241 @@
+
+options{
+	STATIC = false;// as classes não serão estáticas, poderão ser instanciadas, permitindo vários analisadores.
+}
+
+PARSER_BEGIN(Parser)
+import java.io.*;
+import java.util.Scanner;
+
+public class Parser {
+	final static String Version = "C-Criativo Compiler - Version 1.0 - 2022";
+	
+	//Método main da classe Parser
+    public static void main(String[] args) throws ParseException{
+		String filename = "";//nome do arquivo a ser analisado
+		Parser parser;//analisador léxico / sintático.
+		System.out.println(Version);
+		
+		if(args.length > 0)//nome do arquivo foi passado como argumento{
+		{
+			filename = args[args.length-1];
+			System.out.println("Reading from file " + filename + " . . .");
+		}else{// nome do arquivo não foi passado, pede para que seja inserido.
+			Scanner leitor = new Scanner(System.in);
+			System.out.println("Digite o nome do arquivo fonte(.txt)");
+			filename = leitor.nextLine();//nome do arquivo a ser analisado
+			leitor.close();
+		}
+		try{
+			parser = new Parser(new java.io.FileInputStream(filename));
+		}catch(java.io.FileNotFoundException e){
+			System.out.println("File " + filename + " not found ");
+			return;
+		}
+		
+		parser.analiseLexica();//método que faz a análise.
+		
+		//verifica se houve erro léxico.
+		if(parser.token_source.foundLexError() != 0)
+			System.out.println(parser.token_source.foundLexError() + " Lexical Errors found");
+		else
+			System.out.println("Program successfully analized. ");
+
+    }//main
+	
+	//Método que retorna a string que representa a constante X
+	static public String im(int x)
+{
+	int k;
+	String s;
+		s = tokenImage[x];
+		k = s.lastIndexOf("\"");
+	try {s = s.substring(1,k);}
+	catch (StringIndexOutOfBoundsException e){}
+	return s;
+}
+	
+}//Parser
+
+PARSER_END(Parser)
+
+//Definições da classe ParserTokenManager
+//Cria uma variável e um método para controle de erros léxicos.
+TOKEN_MGR_DECLS:
+{
+	int countLexError = 0;
+	
+	public int foundLexError(){
+		return countLexError;
+	}
+}
+
+//caracteres a serem eliminados:
+SKIP:  { 
+	" " |
+	"\t" |
+	"\n" |
+	"\r" |
+	"\f"
+	}
+
+//tratamento de eliminação de comentários.
+SKIP: {
+	"/*" : multilinecoment | "//" : linecoment
+}
+
+//elimina comentários de várias linhas.
+<multilinecoment> SKIP:{
+	"*/" : DEFAULT
+	| <~[]>
+}
+
+//elimina comentários de uma linha
+<linecoment>  SKIP: {
+	<["\n","\r"]> : DEFAULT
+	| <~[]>
+}
+
+//TOKENS AUXILIARES, definições regulares: 
+TOKEN: { 
+	< #LETRA: ["A"-"Z","a"-"z"]> |
+	< #DIGITO: ["0"-"9"] > 
+}
+
+//palavras reservadas:
+TOKEN : {
+	<IF: "if"> 
+	|<WHILE: "while"> |
+	<FOR  : "for"> |
+	<INT  : "int"> |
+	<DOUBLE  : "double"> |
+	<CHAR  : "char"> |
+	<FLOAT  : "float"> |
+	<ELSE  : "else"> | 
+	<DO  : "do"> |
+	<RETURN  : "return"> |
+	<BREAK  : "break"> |
+	<CASE  : "case"> |
+	<CONST  : "const"> |
+	<CONTINUE  : "continue"> |
+	<LONG  : "long"> | 
+	<UNSIGNED  : "unsigned"> |
+	<VOID  : "void"> | 
+	<SWITCH  : "switch"> |
+	<DEFAULTC  : "default"> |
+	<MAIN  : "main"> 
+}
+
+//OPERADORES:
+TOKEN: {
+	<ADICAO : "+"> |
+	<MULTIPLICACAO : "*"> |
+	<DIVISAO : "/"> |
+	<SUBTRACAO : "-"> |
+	<ATRIBUICAO : "="> |
+	<PORCENTAGEM : "%"> |
+	<INCREMENTO : "++"> |
+	<DECREMENTO : "--"> |
+	<E_COMERCIAL : "&"> |
+	<NOT : "!"> |
+	<MENOR_IGUAL : "<="> |
+	<MAIOR_IGUAL : ">="> |
+	<MENOR : "<"> |
+	<MAIOR : ">"> |
+	<IGUAL : "=="> |
+	<DIFERENTE : "!=">
+}
+
+//DIVISORES
+TOKEN: {
+	<PONTOEVIRGULA : ";"> |
+	<VIRGULA : ","> |
+	<ABRECOLCHETES : "["> | 
+	<FECHACOLCHETES : "]"> |
+	<ABRECHAVES : "{"> |
+	<FECHACHAVES : "}"> |
+	<ABREPARENTESES : "("> | 
+	<FECHAPARENTESES : ")"> |
+	<DOIS_PONTOS : ":"> 
+}
+
+
+
+//TRATA OS ERROS LÉXICOS.
+SPECIAL_TOKEN:
+{
+	
+	//tamanho máximo de 10 caracteres por identificador.
+	<INVALID_SIZE_ID: ["a"-"z","A"-"Z","_"] (["a"-"z","A"-"Z","0"-"9","_"]){9,} >
+	{
+		System.err.println("Line " + input_stream.getEndLine() + 
+		" -ID has size greater than : 10 " + image);
+		countLexError++;
+	}
+	|
+	<INVALID_LEXICAL:
+	(~ ["a"-"z", "A"-"Z",
+		"0"-"9",
+		"\"",
+		"(",
+		")",
+		"[",
+		"]",
+		"{",
+		"}",
+		";",
+		",",
+		"=",
+		">",
+		"<",
+		"!",
+		"+",
+		"-",
+		"*",
+		"/",
+		"%",
+		" ",
+		"\t",
+		"\n",
+		"\r",
+		"\f"
+		])+>
+		{	System.err.println("Line " + input_stream.getEndLine() + " - Invalid string found:  " + image);
+			countLexError++;
+		}
+		| 
+		<INVALID_CONST:
+			"\"" (~["\n","\r","\""])* ["\n","\r"]>
+		{
+			System.err.println("Line " + input_stream.getEndLine() + 
+			" -String constant has a \\n: " + image);
+			countLexError++;
+		}
+	
+		
+}
+
+//TOKENS ESPECIAIS (literais, numeros, ids..):
+TOKEN: {
+	<STRING_CONSTANT: "\""( ~["\"","\n","\r"])*"\""> |
+	<NUM: (<DIGITO>)+ > |
+	<ID: (<LETRA>|"_")+(<LETRA> | <DIGITO>)*>
+}
+
+
+
+JAVACODE void analiseLexica()
+{
+Token t;
+    do
+    {
+		t = getNextToken();
+		Token st = t;
+        System.out.println("Line: " + st.beginLine + 
+        " Column: " + st.beginColumn + 
+        " " + st.image +
+        "  "+t.kind);
+			
+    } while (t.kind != ParserConstants.EOF);  
+}
+
